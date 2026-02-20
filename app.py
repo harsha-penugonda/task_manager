@@ -28,6 +28,9 @@ class LiteTodoApp:
         self.sort_by = None
         self.sort_reverse = False
         
+        # Apply default sorting
+        self.apply_default_sort()
+        
         # Setup theme
         self.setup_theme()
         self.create_widgets()
@@ -187,8 +190,6 @@ class LiteTodoApp:
         # Configure row colors for different states
         self.tree.tag_configure("overdue", background=self.colors['overdue'], foreground=self.colors['accent_red'])
         self.tree.tag_configure("done", background=self.colors['done'], foreground=self.colors['fg_secondary'])
-        self.tree.tag_configure("high", foreground='#dc2626')
-        self.tree.tag_configure("low", foreground=self.colors['fg_secondary'])
         
         # Action buttons below the task list
         action_frame = tk.Frame(self.root, bg=self.colors['bg'])
@@ -317,6 +318,7 @@ class LiteTodoApp:
     def refresh_tasks(self):
         """Reload tasks from file"""
         self.tasks = load_tasks()
+        self.apply_default_sort()
         self.filter_tasks()
         messagebox.showinfo("Refreshed", "Tasks reloaded from file")
 
@@ -343,6 +345,16 @@ class LiteTodoApp:
             status_text += f"   •   🔍 Showing: {filtered_count}"
         
         self.status_bar.config(text=status_text)
+
+    def apply_default_sort(self):
+        """Apply default sorting: by deadline first, then by priority"""
+        priority_order = {"High": 0, "Medium": 1, "Low": 2}
+        self.tasks.sort(key=lambda t: (
+            t.deadline is None,  # Tasks without deadline go last
+            t.deadline or "",
+            priority_order.get(t.priority, 3)
+        ))
+        self.filtered_tasks = self.tasks.copy()
 
     def sort_tasks(self, column):
         """Sort tasks by the selected column"""
@@ -399,10 +411,6 @@ class LiteTodoApp:
                 item_tags.append("overdue")
             elif task.status == "Done":
                 item_tags.append("done")
-            elif task.priority == "High":
-                item_tags.append("high")
-            elif task.priority == "Low":
-                item_tags.append("low")
             
             self.tree.insert("", tk.END, iid=original_idx, values=values, tags=item_tags)
 
