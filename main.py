@@ -1,5 +1,16 @@
 # main_optimized.py - Enhanced Lite Todo App
 import os
+import ctypes
+
+# Enable high-DPI awareness on Windows to fix blurry text
+try:
+    ctypes.windll.shcore.SetProcessDpiAwareness(2)  # PROCESS_PER_MONITOR_DPI_AWARE
+except (AttributeError, OSError):
+    try:
+        ctypes.windll.user32.SetProcessDPIAware()  # Fallback for older Windows
+    except (AttributeError, OSError):
+        pass
+
 # Suppress Tk deprecation warning on macOS
 os.environ['TK_SILENCE_DEPRECATION'] = '1'
 
