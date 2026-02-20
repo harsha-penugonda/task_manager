@@ -6,7 +6,7 @@ from tkinter import ttk, messagebox
 
 from theme import get_colors, configure_treeview_style, configure_scrollbar_style
 from widgets import TreeviewTooltip, create_modern_button
-from dialogs import TaskPopup, ReportPopup
+from dialogs import TaskPopup, ReportPopup, MarkDonePopup
 from task_manager import load_tasks, save_tasks, add_task, delete_task, mark_task_done, edit_task
 
 
@@ -489,7 +489,7 @@ class LiteTodoApp:
             messagebox.showerror("Error", f"Could not delete task: {e}")
 
     def mark_done(self):
-        """Mark selected task as done"""
+        """Mark selected task as done with optional remarks"""
         selected = self.tree.selection()
         if not selected:
             messagebox.showwarning("No Selection", "Please select a task first.")
@@ -497,8 +497,12 @@ class LiteTodoApp:
         try:
             idx = int(selected[0])
             if 0 <= idx < len(self.tasks):
-                mark_task_done(self.tasks, idx)
-                self.filter_tasks()
+                task = self.tasks[idx]
+                popup = MarkDonePopup(self.root, task.title, dark_mode=self.dark_mode)
+                self.root.wait_window(popup.top)
+                if popup.confirmed:
+                    mark_task_done(self.tasks, idx, popup.remarks)
+                    self.filter_tasks()
         except (ValueError, IndexError) as e:
             messagebox.showerror("Error", f"Could not update task: {e}")
     
@@ -513,6 +517,7 @@ class LiteTodoApp:
             if 0 <= idx < len(self.tasks):
                 self.tasks[idx].status = "Pending"
                 self.tasks[idx].completion_date = None
+                self.tasks[idx].remarks = None
                 save_tasks(self.tasks)
                 self.filter_tasks()
         except (ValueError, IndexError) as e:

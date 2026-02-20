@@ -248,6 +248,104 @@ class TaskPopup:
         self.top.destroy()
 
 
+class MarkDonePopup:
+    """Dialog for marking task as done with optional remarks"""
+    
+    def __init__(self, master, task_title, dark_mode=False):
+        self.confirmed = False
+        self.remarks = None
+        self.task_title = task_title
+        
+        self.top = tk.Toplevel(master)
+        self.top.withdraw()
+        self.top.title("Mark Task Done")
+        
+        # Get colors based on mode
+        self.colors = get_dialog_colors(dark_mode)
+        
+        # Configure popup window
+        self.top.configure(bg=self.colors['bg'])
+        self.top.geometry("450x420")
+        self.top.resizable(False, False)
+        
+        # Modern header
+        header = tk.Frame(self.top, bg=self.colors['success'], height=50)
+        header.pack(fill=tk.X)
+        header.pack_propagate(False)
+        
+        tk.Label(header, text="✅  Mark Task Done",
+                bg=self.colors['success'], fg='white',
+                font=('Segoe UI', 14, 'bold')).pack(expand=True)
+        
+        # Main content area
+        main_container = tk.Frame(self.top, bg=self.colors['bg'], padx=25, pady=20)
+        main_container.pack(fill=tk.BOTH, expand=True)
+        
+        # Task title display
+        tk.Label(main_container, text="Task:",
+                bg=self.colors['bg'], fg=self.colors['fg_secondary'],
+                font=('Segoe UI', 10)).pack(anchor='w')
+        
+        tk.Label(main_container, text=task_title,
+                bg=self.colors['bg'], fg=self.colors['fg'],
+                font=('Segoe UI', 12, 'bold'), wraplength=380).pack(anchor='w', pady=(2, 15))
+        
+        # Remarks Section
+        tk.Label(main_container, text="📝 Remarks (optional)",
+                bg=self.colors['bg'], fg=self.colors['fg'],
+                font=('Segoe UI', 11, 'bold')).pack(anchor='w', pady=(0, 8))
+        
+        remarks_border = tk.Frame(main_container, bg=self.colors['border'], padx=1, pady=1)
+        remarks_border.pack(fill=tk.X)
+        
+        self.remarks_text = tk.Text(remarks_border, font=('Segoe UI', 11),
+                                    bg=self.colors['entry_bg'], fg=self.colors['entry_fg'],
+                                    insertbackground=self.colors['fg'],
+                                    relief=tk.FLAT, height=4, wrap=tk.WORD)
+        self.remarks_text.pack(fill=tk.X, padx=8, pady=8)
+        
+        # Action Buttons - separate frame at bottom
+        btn_container = tk.Frame(self.top, bg=self.colors['bg'], padx=25, pady=20)
+        btn_container.pack(fill=tk.X, side=tk.BOTTOM)
+        
+        # Confirm button
+        confirm_btn = tk.Button(btn_container, text="✓  Mark Done", command=self.confirm,
+                               font=('Segoe UI', 11, 'bold'),
+                               bg=self.colors['success'], fg='white',
+                               bd=0, relief=tk.FLAT, padx=25, pady=12, cursor="hand2")
+        confirm_btn.pack(side=tk.LEFT)
+        
+        # Cancel button
+        cancel_btn = tk.Button(btn_container, text="Cancel", command=self.cancel,
+                              font=('Segoe UI', 11),
+                              bg=self.colors['bg_secondary'], fg=self.colors['fg'],
+                              bd=1, relief=tk.SOLID, padx=25, pady=12, cursor="hand2")
+        cancel_btn.pack(side=tk.RIGHT)
+        
+        # Center the popup
+        self.top.update_idletasks()
+        width = self.top.winfo_width()
+        height = self.top.winfo_height()
+        x = (self.top.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.top.winfo_screenheight() // 2) - (height // 2)
+        self.top.geometry(f"{width}x{height}+{x}+{y}")
+        
+        self.top.transient(master)
+        self.top.grab_set()
+        self.top.deiconify()
+        self.remarks_text.focus_set()
+    
+    def confirm(self):
+        self.confirmed = True
+        remarks = self.remarks_text.get("1.0", tk.END).strip()
+        self.remarks = remarks if remarks else None
+        self.top.destroy()
+    
+    def cancel(self):
+        self.confirmed = False
+        self.top.destroy()
+
+
 class ReportPopup:
     """Dialog for generating standup reports"""
     
@@ -475,6 +573,8 @@ class ReportPopup:
                 if task.tags:
                     done_section += f" [{', '.join(task.tags)}]"
                 done_section += "\n"
+                if task.remarks:
+                    done_section += f"   └─ Remarks: {task.remarks}\n"
         else:
             done_section += "No completed tasks\n"
 

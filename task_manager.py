@@ -11,13 +11,14 @@ BACKUP_FILE = "tasks_backup.json"
 class Task:
     def __init__(self, title: str, deadline: Optional[str] = None, 
                  priority: str = "Medium", status: str = "Pending", tags: Optional[List[str]] = None,
-                 completion_date: Optional[str] = None):
+                 completion_date: Optional[str] = None, remarks: Optional[str] = None):
         self.title = title
         self.deadline = deadline  # Expected format: "YYYY-MM-DD"
         self.priority = priority  # High / Medium / Low
         self.status = status      # Pending / Done
         self.tags = tags or []
         self.completion_date = completion_date  # Date when task was marked done
+        self.remarks = remarks  # Optional remarks when marking done
 
     def is_overdue(self) -> bool:
         if self.deadline and self.status == "Pending":
@@ -35,7 +36,8 @@ class Task:
             "priority": self.priority,
             "status": self.status,
             "tags": self.tags,
-            "completion_date": self.completion_date
+            "completion_date": self.completion_date,
+            "remarks": self.remarks
         }
 
     @staticmethod
@@ -46,7 +48,8 @@ class Task:
             priority=data.get("priority", "Medium"),
             status=data.get("status", "Pending"),
             tags=data.get("tags", []),
-            completion_date=data.get("completion_date")
+            completion_date=data.get("completion_date"),
+            remarks=data.get("remarks")
         )
 
 # --------------------------
@@ -116,10 +119,11 @@ def delete_task(tasks: List[Task], task_index: int):
         tasks.pop(task_index)
         save_tasks(tasks)
 
-def mark_task_done(tasks: List[Task], task_index: int):
+def mark_task_done(tasks: List[Task], task_index: int, remarks: Optional[str] = None):
     if 0 <= task_index < len(tasks):
         tasks[task_index].status = "Done"
         tasks[task_index].completion_date = datetime.today().strftime("%Y-%m-%d")
+        tasks[task_index].remarks = remarks if remarks else None
         save_tasks(tasks)
 
 def edit_task(tasks: List[Task], task_index: int, new_task: Task):
