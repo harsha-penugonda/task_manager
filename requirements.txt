@@ -1,0 +1,13 @@
+# Lite Todo / Standup App - Python Requirements
+# No external packages required - uses only Python standard library
+
+# Python Version: 3.7+
+
+# Built-in packages used:
+# - tkinter (GUI framework - included with Python)
+# - json (data storage)
+# - datetime (date handling)
+# - typing (type hints)
+
+# Optional (for creating executables):
+# pyinstaller==5.13.0

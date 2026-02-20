@@ -1,0 +1,42 @@
+[
+    {
+        "title": "Complete project documentation",
+        "deadline": "2026-02-25",
+        "priority": "High",
+        "status": "Pending",
+        "tags": ["work", "documentation"],
+        "completion_date": null
+    },
+    {
+        "title": "Review pull requests",
+        "deadline": "2026-02-20",
+        "priority": "High",
+        "status": "Done",
+        "tags": ["work", "code-review"],
+        "completion_date": "2026-02-19"
+    },
+    {
+        "title": "Update dependencies",
+        "deadline": "2026-03-01",
+        "priority": "Medium",
+        "status": "Pending",
+        "tags": ["maintenance"],
+        "completion_date": null
+    },
+    {
+        "title": "Fix login bug",
+        "deadline": "2026-02-15",
+        "priority": "High",
+        "status": "Pending",
+        "tags": ["bug", "urgent"],
+        "completion_date": null
+    },
+    {
+        "title": "Prepare standup notes",
+        "deadline": null,
+        "priority": "Low",
+        "status": "Done",
+        "tags": ["meeting"],
+        "completion_date": "2026-02-18"
+    }
+]
