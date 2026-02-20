@@ -1,7 +1,9 @@
 # Lite Todo / Standup App - Python Requirements
-# No external packages required - uses only Python standard library
 
 # Python Version: 3.7+
+
+# Required packages:
+tkcalendar>=1.6.1
 
 # Built-in packages used:
 # - tkinter (GUI framework - included with Python)
