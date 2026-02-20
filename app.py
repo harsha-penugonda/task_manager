@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from theme import get_colors, configure_treeview_style, configure_scrollbar_style
-from widgets import TreeviewTooltip, create_modern_button
+from widgets import create_modern_button
 from dialogs import TaskPopup, ReportPopup, MarkDonePopup
 from task_manager import load_tasks, save_tasks, add_task, delete_task, mark_task_done, edit_task
 
@@ -225,12 +225,16 @@ class LiteTodoApp:
         
         # Bindings
         self.tree.bind("<Button-3>", self.show_context_menu)  # Right-click on Windows
+        self.tree.bind("<Button-1>", self.on_cell_click)  # Track clicked cell
         self.tree.bind("<Double-1>", lambda e: self.edit_task_popup())
         self.tree.bind("<Return>", lambda e: self.mark_done())
         self.tree.bind("<Delete>", lambda e: self.delete_task())
+        self.tree.bind("<Control-c>", self.copy_selected_row)
+        self.tree.bind("<Control-C>", self.copy_selected_row)
         
-        # Add tooltip for showing full text on hover
-        self.tree_tooltip = TreeviewTooltip(self.tree, delay=400)
+        # Track clicked cell for context menu
+        self.clicked_column = None
+        self.column_names = columns
         
         # Modern right-click context menu
         self.menu = tk.Menu(self.root, tearoff=0, 
@@ -240,8 +244,10 @@ class LiteTodoApp:
         self.menu.add_command(label="  ✅  Mark as Done  ", command=self.mark_done)
         self.menu.add_command(label="  ↩️  Mark as Pending  ", command=self.mark_pending)
         self.menu.add_command(label="  ✏️  Edit Task  ", command=self.edit_task_popup)
-        self.menu.add_command(label="  🗑️  Delete Task  ", command=self.delete_task)
+        self.menu.add_command(label="  🗑  Delete Task  ", command=self.delete_task)
         self.menu.add_separator()
+        self.menu.add_command(label="  📋  Copy Cell  ", command=self.copy_clicked_cell)
+        self.menu.add_command(label="  📋  Copy Row  ", command=self.copy_selected_row)
         self.menu.add_command(label="  📋  Copy Title  ", command=self.copy_task_title)
         
         # Modern Status Bar
@@ -433,12 +439,55 @@ class LiteTodoApp:
             
             self.tree.insert("", tk.END, iid=original_idx, values=values, tags=item_tags)
 
+    def on_cell_click(self, event):
+        """Track which cell was clicked for copy operations"""
+        col = self.tree.identify_column(event.x)
+        if col:
+            # Convert #1, #2, etc. to column index
+            self.clicked_column = int(col.replace('#', '')) - 1
+        else:
+            self.clicked_column = None
+    
     def show_context_menu(self, event):
         """Show context menu on right-click"""
         selected = self.tree.identify_row(event.y)
         if selected:
             self.tree.selection_set(selected)
+            # Track which column was right-clicked
+            col = self.tree.identify_column(event.x)
+            if col:
+                self.clicked_column = int(col.replace('#', '')) - 1
             self.menu.post(event.x_root, event.y_root)
+    
+    def copy_clicked_cell(self):
+        """Copy the content of the clicked cell to clipboard"""
+        selected = self.tree.selection()
+        if not selected:
+            return
+        if self.clicked_column is None:
+            return
+        
+        values = self.tree.item(selected[0], 'values')
+        if self.clicked_column < len(values):
+            cell_text = str(values[self.clicked_column])
+            self.root.clipboard_clear()
+            self.root.clipboard_append(cell_text)
+            col_name = self.column_names[self.clicked_column].capitalize()
+            self.status_bar.config(text=f"Copied {col_name}: {cell_text[:50]}{'...' if len(cell_text) > 50 else ''}")
+    
+    def copy_selected_row(self, event=None):
+        """Copy the entire selected row to clipboard (Ctrl+C)"""
+        selected = self.tree.selection()
+        if not selected:
+            return
+        
+        values = self.tree.item(selected[0], 'values')
+        # Format: Status | Priority | Title | Deadline | Tags
+        row_text = " | ".join(str(v) for v in values)
+        self.root.clipboard_clear()
+        self.root.clipboard_append(row_text)
+        self.status_bar.config(text="Row copied to clipboard")
+        return 'break'  # Prevent default behavior
 
     def copy_task_title(self):
         """Copy selected task title to clipboard"""
@@ -448,7 +497,7 @@ class LiteTodoApp:
         idx = int(selected[0])
         self.root.clipboard_clear()
         self.root.clipboard_append(self.tasks[idx].title)
-        messagebox.showinfo("Copied", "Task title copied to clipboard!")
+        self.status_bar.config(text=f"Title copied: {self.tasks[idx].title[:50]}{'...' if len(self.tasks[idx].title) > 50 else ''}")
 
     def add_task_popup(self):
         """Show add task dialog"""
