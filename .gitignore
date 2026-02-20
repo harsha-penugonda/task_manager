@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# User data (optional - remove if you want to track these)
+tasks.json
+tasks_backup.json
+
+# IDE
+.vscode/
+.idea/
