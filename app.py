@@ -356,6 +356,25 @@ class LiteTodoApp:
         ))
         self.filtered_tasks = self.tasks.copy()
 
+    def apply_current_sort(self):
+        """Reapply the current sort (or default if none selected)"""
+        if self.sort_by:
+            # Reapply the current column sort
+            if self.sort_by == "priority":
+                priority_order = {"High": 0, "Medium": 1, "Low": 2}
+                self.tasks.sort(key=lambda t: priority_order.get(t.priority, 3), reverse=self.sort_reverse)
+            elif self.sort_by == "deadline":
+                self.tasks.sort(key=lambda t: (t.deadline is None, t.deadline or ""), reverse=self.sort_reverse)
+            elif self.sort_by == "status":
+                self.tasks.sort(key=lambda t: t.status, reverse=self.sort_reverse)
+            elif self.sort_by == "title":
+                self.tasks.sort(key=lambda t: t.title.lower(), reverse=self.sort_reverse)
+            elif self.sort_by == "tags":
+                self.tasks.sort(key=lambda t: ', '.join(t.tags).lower(), reverse=self.sort_reverse)
+        else:
+            # Apply default sort
+            self.apply_default_sort()
+
     def sort_tasks(self, column):
         """Sort tasks by the selected column"""
         if self.sort_by == column:
@@ -437,6 +456,7 @@ class LiteTodoApp:
         self.root.wait_window(popup.top)
         if popup.task:
             add_task(self.tasks, popup.task)
+            self.apply_current_sort()
             self.filter_tasks()
 
     def edit_task_popup(self):
@@ -450,6 +470,7 @@ class LiteTodoApp:
         self.root.wait_window(popup.top)
         if popup.task:
             edit_task(self.tasks, idx, popup.task)
+            self.apply_current_sort()
             self.filter_tasks()
 
     def delete_task(self):
