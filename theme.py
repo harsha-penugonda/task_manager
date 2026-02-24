@@ -18,8 +18,10 @@ LIGHT_COLORS = {
     'accent2': '#3b82f6',  # Blue
     'accent3': '#f59e0b',  # Amber
     'accent_red': '#ef4444',
+    'accent_orange': '#f97316',  # Orange for In Progress
     'overdue': '#fef2f2',
     'done': '#f0fdf4',
+    'in_progress': '#fff7ed',  # Light orange background
     'card_bg': '#ffffff',
     'border': '#e2e8f0'
 }
@@ -40,8 +42,10 @@ DARK_COLORS = {
     'accent2': '#00adb5',  # Cyan
     'accent3': '#ffc947',  # Warm yellow
     'accent_red': '#ff6b6b',
+    'accent_orange': '#fb923c',  # Orange for In Progress
     'overdue': '#4a1a1a',
     'done': '#1a4a2a',
+    'in_progress': '#4a2a1a',  # Dark orange background
     'card_bg': '#16213e',
     'border': '#2a2a4e'
 }

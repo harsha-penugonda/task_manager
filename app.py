@@ -147,7 +147,7 @@ class LiteTodoApp:
         self.filter_var = tk.StringVar(value="All")
         self.filter_buttons = {}
         
-        for option in ["All", "Pending", "Done", "Overdue", "High Priority"]:
+        for option in ["All", "Pending", "In Progress", "Done", "Overdue", "High Priority"]:
             is_selected = option == "All"
             btn = tk.Button(filter_inner, text=option,
                           command=lambda o=option: self.set_filter(o),
@@ -190,6 +190,7 @@ class LiteTodoApp:
         # Configure row colors for different states
         self.tree.tag_configure("overdue", background=self.colors['overdue'], foreground=self.colors['accent_red'])
         self.tree.tag_configure("done", background=self.colors['done'], foreground=self.colors['fg_secondary'])
+        self.tree.tag_configure("in_progress", background=self.colors.get('in_progress', '#fff7ed'), foreground=self.colors.get('accent_orange', '#ea580c'))
         
         # Action buttons below the task list
         action_frame = tk.Frame(self.root, bg=self.colors['bg'])
@@ -201,6 +202,13 @@ class LiteTodoApp:
                             font=('Segoe UI', 10, 'bold'),
                             bd=0, relief=tk.FLAT, padx=16, pady=8, cursor="hand2")
         done_btn.pack(side=tk.LEFT, padx=(0, 8))
+        
+        in_progress_btn = tk.Button(action_frame, text="🔄  In Progress",
+                               command=self.mark_in_progress,
+                               bg=self.colors.get('accent_orange', '#f97316'), fg='white',
+                               font=('Segoe UI', 10, 'bold'),
+                               bd=0, relief=tk.FLAT, padx=16, pady=8, cursor="hand2")
+        in_progress_btn.pack(side=tk.LEFT, padx=(0, 8))
         
         pending_btn = tk.Button(action_frame, text="↩️  Mark Pending",
                                command=self.mark_pending,
@@ -242,6 +250,7 @@ class LiteTodoApp:
                            activebackground=self.colors['accent2'], activeforeground='white',
                            font=('Segoe UI', 10), bd=0, relief=tk.FLAT)
         self.menu.add_command(label="  ✅  Mark as Done  ", command=self.mark_done)
+        self.menu.add_command(label="  🔄  Mark In Progress  ", command=self.mark_in_progress)
         self.menu.add_command(label="  ↩️  Mark as Pending  ", command=self.mark_pending)
         self.menu.add_command(label="  ✏️  Edit Task  ", command=self.edit_task_popup)
         self.menu.add_command(label="  🗑  Delete Task  ", command=self.delete_task)
@@ -309,6 +318,8 @@ class LiteTodoApp:
             # Apply status filter
             if filter_option == "Pending" and task.status != "Pending":
                 continue
+            elif filter_option == "In Progress" and task.status != "In Progress":
+                continue
             elif filter_option == "Done" and task.status != "Done":
                 continue
             elif filter_option == "Overdue" and not task.is_overdue():
@@ -341,11 +352,12 @@ class LiteTodoApp:
         """Update status bar with task statistics"""
         total = len(self.tasks)
         pending = sum(1 for t in self.tasks if t.status == "Pending")
+        in_progress = sum(1 for t in self.tasks if t.status == "In Progress")
         done = sum(1 for t in self.tasks if t.status == "Done")
         overdue = sum(1 for t in self.tasks if t.is_overdue())
         
         filtered_count = len(self.filtered_tasks)
-        status_text = f"📋 Total: {total}   •   ⏳ Pending: {pending}   •   ✅ Done: {done}   •   ⚠️ Overdue: {overdue}"
+        status_text = f"📋 Total: {total}   •   ⏳ Pending: {pending}   •   🔄 In Progress: {in_progress}   •   ✅ Done: {done}   •   ⚠️ Overdue: {overdue}"
         
         if filtered_count < total:
             status_text += f"   •   🔍 Showing: {filtered_count}"
@@ -423,8 +435,16 @@ class LiteTodoApp:
             # Format deadline
             deadline_display = task.deadline if task.deadline else "—"
             
+            # Status icons: Done=✅, In Progress=🔄, Pending=⬜
+            if task.status == "Done":
+                status_icon = "✅"
+            elif task.status == "In Progress":
+                status_icon = "🔄"
+            else:
+                status_icon = "⬜"
+            
             values = (
-                "✅" if task.status == "Done" else "⬜",
+                status_icon,
                 priority_display,
                 task.title,
                 deadline_display,
@@ -436,6 +456,8 @@ class LiteTodoApp:
                 item_tags.append("overdue")
             elif task.status == "Done":
                 item_tags.append("done")
+            elif task.status == "In Progress":
+                item_tags.append("in_progress")
             
             self.tree.insert("", tk.END, iid=original_idx, values=values, tags=item_tags)
 
@@ -567,6 +589,22 @@ class LiteTodoApp:
                 self.tasks[idx].status = "Pending"
                 self.tasks[idx].completion_date = None
                 self.tasks[idx].remarks = None
+                save_tasks(self.tasks)
+                self.filter_tasks()
+        except (ValueError, IndexError) as e:
+            messagebox.showerror("Error", f"Could not update task: {e}")
+    
+    def mark_in_progress(self):
+        """Mark selected task as in progress"""
+        selected = self.tree.selection()
+        if not selected:
+            messagebox.showwarning("No Selection", "Please select a task first.")
+            return
+        try:
+            idx = int(selected[0])
+            if 0 <= idx < len(self.tasks):
+                self.tasks[idx].status = "In Progress"
+                self.tasks[idx].completion_date = None
                 save_tasks(self.tasks)
                 self.filter_tasks()
         except (ValueError, IndexError) as e:

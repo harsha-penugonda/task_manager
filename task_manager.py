@@ -15,13 +15,13 @@ class Task:
         self.title = title
         self.deadline = deadline  # Expected format: "YYYY-MM-DD"
         self.priority = priority  # High / Medium / Low
-        self.status = status      # Pending / Done
+        self.status = status      # Pending / In Progress / Done
         self.tags = tags or []
         self.completion_date = completion_date  # Date when task was marked done
         self.remarks = remarks  # Optional remarks when marking done
 
     def is_overdue(self) -> bool:
-        if self.deadline and self.status == "Pending":
+        if self.deadline and self.status in ("Pending", "In Progress"):
             try:
                 deadline_date = datetime.strptime(self.deadline, "%Y-%m-%d").date()
                 return datetime.today().date() > deadline_date

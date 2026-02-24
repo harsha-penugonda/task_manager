@@ -529,6 +529,7 @@ class ReportPopup:
                 return
 
         done_tasks = []
+        in_progress_tasks = []
         pending_tasks = []
 
         for task in self.tasks:
@@ -542,20 +543,22 @@ class ReportPopup:
                         pass
                 elif not start_date and not end_date:
                     done_tasks.append(task)
+            elif task.status == "In Progress":
+                in_progress_tasks.append(task)
             else:
                 if not start_date and not end_date:
                     pending_tasks.append(task)
                 else:
                     pending_tasks.append(task)
 
-        self.report_text = self._format_report(done_tasks, pending_tasks, start_date_str, end_date_str)
+        self.report_text = self._format_report(done_tasks, in_progress_tasks, pending_tasks, start_date_str, end_date_str)
 
         self.text_area.config(state=tk.NORMAL)
         self.text_area.delete(1.0, tk.END)
         self.text_area.insert(tk.END, self.report_text)
         self.text_area.config(state=tk.DISABLED)
 
-    def _format_report(self, done_tasks, pending_tasks, start_date, end_date):
+    def _format_report(self, done_tasks, in_progress_tasks, pending_tasks, start_date, end_date):
         header = "═" * 60 + "\n"
         header += "STANDUP REPORT\n"
         if start_date or end_date:
@@ -578,6 +581,20 @@ class ReportPopup:
         else:
             done_section += "No completed tasks\n"
 
+        in_progress_section = "\n🔄 IN PROGRESS:\n" + "─" * 60 + "\n"
+        if in_progress_tasks:
+            for i, task in enumerate(in_progress_tasks, 1):
+                in_progress_section += f"{i}. {task.title}"
+                if task.deadline:
+                    in_progress_section += f" (deadline: {task.deadline})"
+                if task.priority != "Medium":
+                    in_progress_section += f" [Priority: {task.priority}]"
+                if task.tags:
+                    in_progress_section += f" [{', '.join(task.tags)}]"
+                in_progress_section += "\n"
+        else:
+            in_progress_section += "No tasks in progress\n"
+
         pending_section = "\n☐ PENDING:\n" + "─" * 60 + "\n"
         if pending_tasks:
             for i, task in enumerate(pending_tasks, 1):
@@ -592,7 +609,7 @@ class ReportPopup:
         else:
             pending_section += "No pending tasks\n"
 
-        return header + done_section + pending_section
+        return header + done_section + in_progress_section + pending_section
 
     def copy_to_clipboard(self):
         self.top.clipboard_clear()
