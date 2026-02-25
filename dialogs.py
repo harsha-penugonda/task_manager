@@ -18,6 +18,7 @@ class TaskPopup:
     
     def __init__(self, master, title, task=None, dark_mode=False):
         self.task = None
+        self.original_task = task  # Store original task to preserve status, completion_date, remarks
         self.dark_mode = dark_mode
         self.top = tk.Toplevel(master)
         self.top.withdraw()  # Hide window during setup to prevent flickering
@@ -244,7 +245,14 @@ class TaskPopup:
         
         priority = self.priority_var.get()
         tags = [t.strip() for t in self.entry_tags.get().split(",") if t.strip()]
-        self.task = Task(title=title, deadline=deadline, priority=priority, tags=tags)
+        
+        # Preserve status, completion_date, and remarks from original task when editing
+        status = self.original_task.status if self.original_task else "Pending"
+        completion_date = self.original_task.completion_date if self.original_task else None
+        remarks = self.original_task.remarks if self.original_task else None
+        
+        self.task = Task(title=title, deadline=deadline, priority=priority, status=status,
+                        tags=tags, completion_date=completion_date, remarks=remarks)
         self.top.destroy()
 
 
